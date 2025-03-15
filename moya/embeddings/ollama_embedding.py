@@ -1,33 +1,39 @@
 from moya.embeddings.base_embedding import BaseEmbeddingRepository
 from typing import Any, Optional
-from sentence_transformers import SentenceTransformer
+import ollama  # Import Ollama's client
 
 class OllamaEmbeddingRepository(BaseEmbeddingRepository):
     def __init__(self, model: Optional[str] = None):
-        available_models = [
-            'all-MiniLM-L6-v2',
-            'paraphrase-MiniLM-L6-v2',
-            'distiluse-base-multilingual-cased-v1'
-        ]
+        # Get available models directly from Ollama's model list
+        available_models = [m['model'] for m in ollama.list()['models']]
+
+        print("\nTo get more models, use: ollama pull <model-name>\n")
+
         if model is None:
             print("Available models:")
             for idx, m in enumerate(available_models, 1):
                 print(f"{idx}. {m}")
-            choice = input("Choose a model by number or press enter to use the default (1): ")
+            choice = input("\nChoose a model by number, type model name, or press Enter for default (1): ").strip()
+
             if choice.isdigit() and 1 <= int(choice) <= len(available_models):
                 model = available_models[int(choice) - 1]
+            elif choice:  # If user types a model name directly
+                model = choice
             else:
                 model = available_models[0]
-        self.model = SentenceTransformer(model)
+
+        self.model = model
+        print(f"Selected model: {self.model}")
 
     def encode_text(self, text: str) -> Any:
-        """Encode text into an embedding"""
-        return self.model.encode(text)
+        """Encode text into an embedding using Ollama"""
+        response = ollama.embeddings(model=self.model, prompt=text)
+        return response['embedding']
 
     def encode_texts(self, texts: list[str]) -> list[Any]:
-        """Encode a list of texts into embeddings"""
-        return self.model.encode(texts)
+        """Encode a list of texts into embeddings using Ollama"""
+        return [self.encode_text(text) for text in texts]
 
     def get_model_config(self) -> dict:
-        """Get the model's configuration"""
-        return self.model[0].auto_model.config.to_dict()
+        """Get the model's configuration (if applicable for Ollama)"""
+        return {"model": self.model}
