@@ -3,6 +3,7 @@ Interactive chat example using Claude agent with conversation memory.
 """
 
 import os
+import dotenv
 from moya.tools.tool_registry import ToolRegistry
 from moya.registry.agent_registry import AgentRegistry
 from moya.orchestrators.simple_orchestrator import SimpleOrchestrator
@@ -12,6 +13,7 @@ from moya.memory.file_system_repo import FileSystemRepository
 import json
 from quick_tools import QuickTools
 from moya.tools.base_tool import BaseTool
+dotenv.load_dotenv()
 
 
 def setup_agent():
@@ -23,7 +25,7 @@ def setup_agent():
     config = ClaudeAgentConfig(
         agent_name="claude_agent",
         description="An interactive chat agent using Claude",
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=os.getenv("CLAUDE_KEY"),
         model_name="claude-3-opus-20240229",
         agent_type="ChatAgent",
         tool_registry=tool_registry,
