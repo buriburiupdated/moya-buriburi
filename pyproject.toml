@@ -37,7 +37,9 @@ dependencies = [
   "ollama>=0.4.7",
   "langchain_ollama>=0.2.3",
   "langchain_community>=0.3.19",
-  "faiss-cpu>=1.10.0"
+  "faiss-cpu>=1.10.0",
+  "pypdf>=5.3.1",
+  "beautifulsoup4>=4.13.3"
 ]
 requires-python = ">=3.11" 
 
