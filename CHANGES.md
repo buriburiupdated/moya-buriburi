@@ -7,3 +7,5 @@ pip install .
 Issue with dotenv. Replaced dotenv with python-dotenv in .toml file
 
 Added support for claude.
+
+Added hg embeddings
