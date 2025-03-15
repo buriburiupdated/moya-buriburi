@@ -27,4 +27,9 @@ class BaseVectorstoreRepository(abc.ABC):
         """
         pass
 
-
+    @abc.abstractmethod
+    def get_context(self, query: str, k: int) -> List[Document]:
+        """
+        Retrieve the k closest vectors to the query
+        """
+        pass
