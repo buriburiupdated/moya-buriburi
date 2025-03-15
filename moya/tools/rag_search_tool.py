@@ -9,9 +9,11 @@ from moya.tools.base_tool import BaseTool
 
 class VectorSearchTool:
     """Tools for vector database search capabilities."""
+    def __init__(self):
+        self.vector_store = None
     
     @staticmethod
-    def search_vectorstore(query: str, collection_name: str = "faiss-index", k: int = 5) -> str:
+    def search_vectorstore(self, query: str, collection_name: str = "faiss-index", k: int = 5) -> str:
         """
         Search a vector database for relevant documents based on semantic similarity.
         
@@ -23,12 +25,10 @@ class VectorSearchTool:
         Returns:
             JSON string containing search results
         """
-        from moya.vectorstore.faisscpu_vectorstore import FAISSCPUVectorstoreRepository
-        
         try:
             # Get the appropriate vector store
             # In a real implementation, you might want to maintain a registry of vector stores
-            vector_store = FAISSCPUVectorstoreRepository.load_vectorstore(collection_name)
+            vector_store = self.vector_store
             
             # Search for relevant documents
             results = vector_store.get_context(query, k)
@@ -56,13 +56,14 @@ class VectorSearchTool:
             })
     
     @staticmethod
-    def configure_vector_search_tools(tool_registry) -> None:
+    def configure_vector_search_tools(tool_registry, vector_store) -> None:
         """
         Configure vector search tools and register them with the tool registry.
         
         Args:
             tool_registry: The tool registry to register tools with.
         """
+        VectorSearchTool.vector_store = vector_store
         tool_registry.register_tool(
             BaseTool(
                 name="VectorSearchTool",

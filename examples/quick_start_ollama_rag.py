@@ -110,7 +110,7 @@ def setup_agent(collection_name: str):
     """Set up the Ollama agent with RAG search tool."""
     # Set up the tool registry and configure tools
     tool_registry = ToolRegistry()
-    VectorSearchTool.configure_vector_search_tools(tool_registry)
+    VectorSearchTool.configure_vector_search_tools(tool_registry, FAISSCPUVectorstoreRepository)
     EphemeralMemory.configure_memory_tools(tool_registry)
     
     # Create agent configuration for Ollama

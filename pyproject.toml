@@ -52,6 +52,5 @@ packages = [
     "moya.registry",
     "moya.tools",
     "moya.utils",
-    "moya.vectorstore",
-    "moya.embeddings"
+    "moya.vectorstore"
     ]
