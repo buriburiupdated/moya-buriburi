@@ -1,5 +1,6 @@
 .venv/*
 .myenv/*
+myenv/*
 hackiiit/*
 venv/*  
 # Byte-compiled
