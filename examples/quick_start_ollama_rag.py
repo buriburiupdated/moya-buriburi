@@ -5,16 +5,9 @@ about the Moya framework with proper document citations.
 
 import os
 import sys
-import re
-from bs4 import BeautifulSoup
 import glob
-from typing import List
 
-from langchain_community.document_loaders import TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_core.documents import Document
 
 from moya.agents.ollama_agent import OllamaAgent
 from moya.agents.base_agent import AgentConfig
@@ -28,89 +21,11 @@ from moya.conversation.thread import Thread
 from moya.vectorstore.faisscpu_vectorstore import FAISSCPUVectorstoreRepository
 
 
-
-def extract_text_from_html(html_file: str) -> str:
-    """Extract clean text content from HTML file."""
-    with open(html_file, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    soup = BeautifulSoup(content, 'html.parser')
-    
-    # Remove script and style elements
-    for script in soup(["script", "style"]):
-        script.decompose()
-    
-    # Get text and clean up
-    text = soup.get_text()
-    lines = (line.strip() for line in text.splitlines())
-    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-    text = '\n'.join(chunk for chunk in chunks if chunk)
-    
-    # Add source information
-    filename = os.path.basename(html_file)
-    return f"Source: {filename}\n\n{text}"
-
-
-def create_docs_vectorstore(docs_dir: str, collection_name: str = "moya-docs") -> None:
-    """
-    Process HTML files and create a vector store from the docs directory.
-    """
-    print(f"Creating vector store from docs in {docs_dir}...")
-    
-    # Get all HTML files
-    html_files = glob.glob(f"{docs_dir}/*.html")
-    if not html_files:
-        print(f"No HTML files found in {docs_dir}")
-        return None
-    
-    # Use LangChain's HTML document loader
-    from langchain_community.document_loaders import BSHTMLLoader
-    
-    documents = []
-    for html_file in html_files:
-        try:
-            loader = BSHTMLLoader(html_file)
-            docs = loader.load()
-            # Add filename to metadata
-            for doc in docs:
-                doc.metadata["source"] = os.path.basename(html_file)
-            documents.extend(docs)
-        except Exception as e:
-            print(f"Error loading {html_file}: {e}")
-    
-    print(f"Processed {len(documents)} HTML files")
-    
-    # Split documents into chunks
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200,
-        separators=["\n\n", "\n", ". ", " ", ""]
-    )
-    
-    chunks = text_splitter.split_documents(documents)
-    print(f"Created {len(chunks)} document chunks")
-    
-    # Initialize embeddings
-    embeddings = OllamaEmbeddings(model="llama3.1:latest")
-    
-    # Save vectorstore
-    os.makedirs("vectorstores", exist_ok=True)
-    vectorstore_path = f"vectorstores/{collection_name}"
-    
-    # Create FAISS repository correctly
-    vectorstore_repo = FAISSCPUVectorstoreRepository(path=vectorstore_path, embeddings=embeddings)
-    vectorstore_repo.create_vectorstore()  # No parameters needed here
-    vectorstore_repo.add_vector(chunks)    # Add chunks to initialize the vectorstore
-    
-    print(f"Vector store saved to {vectorstore_path}")
-    return vectorstore_path
-
-
-def setup_agent(collection_name: str):
+def setup_agent(vector_store):
     """Set up the Ollama agent with RAG search tool."""
     # Set up the tool registry and configure tools
     tool_registry = ToolRegistry()
-    VectorSearchTool.configure_vector_search_tools(tool_registry, FAISSCPUVectorstoreRepository)
+    VectorSearchTool.configure_vector_search_tools(tool_registry, vector_store=vector_store)
     EphemeralMemory.configure_memory_tools(tool_registry)
     
     # Create agent configuration for Ollama
@@ -167,15 +82,19 @@ def format_conversation_context(messages) -> str:
 
 
 def main():
-    docs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "../docs")
-    collection_name = "moya-docs"
+    docs_dir = "../docs"
+    path = "faiss-index"
     
-    # Create vector store from docs if it doesn't exist
-    if not os.path.exists(f"vectorstores/{collection_name}"):
-        create_docs_vectorstore(docs_dir, collection_name)
+    embeddings = OllamaEmbeddings(model="nomic-embed-text")
+
+    vector_store = FAISSCPUVectorstoreRepository(path, embeddings)
+    vector_store.create_vectorstore()
+
+    for file in glob.glob(f"{docs_dir}/*"):
+        vector_store.load_file(file)
     
     # Set up agent with RAG search tool
-    orchestrator, agent = setup_agent(collection_name)
+    orchestrator, agent = setup_agent(vector_store)
     thread_id = "moya_docs_thread"
     
     # Initialize conversation memory

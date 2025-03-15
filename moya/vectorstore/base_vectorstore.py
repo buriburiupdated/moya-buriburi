@@ -13,7 +13,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 class BaseVectorstoreRepository(abc.ABC):
     """
     Abstract interface for storing and retrieving vectors
-    """
+    """ 
 
     @abc.abstractmethod
     def create_vectorstore(self, direcotry: str) -> None:
@@ -68,6 +68,6 @@ class BaseVectorstoreRepository(abc.ABC):
         elif path.endswith(".csv"):
             loader = CSVLoader(file_path=path)
         else:
-            raise ValueError("File type not supported")
+            return
         docs = loader.load()
         self.splitter(docs, 1000, 200)

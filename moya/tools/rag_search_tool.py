@@ -32,6 +32,7 @@ class VectorSearchTool:
             
             # Search for relevant documents
             results = vector_store.get_context(query, k)
+            print(results)
             
             # Format results
             formatted_results = []
