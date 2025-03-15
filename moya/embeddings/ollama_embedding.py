@@ -2,6 +2,8 @@ from moya.embeddings.base_embedding import BaseEmbeddingRepository
 from typing import Any, Optional
 import ollama  # Import Ollama's client
 
+from langchain_ollama import OllamaEmbeddings
+
 class OllamaEmbeddingRepository(BaseEmbeddingRepository):
     def __init__(self, model: Optional[str] = None):
         # Get available models directly from Ollama's model list
@@ -27,8 +29,9 @@ class OllamaEmbeddingRepository(BaseEmbeddingRepository):
 
     def encode_text(self, text: str) -> Any:
         """Encode text into an embedding using Ollama"""
-        response = ollama.embeddings(model=self.model, prompt=text)
-        return response['embedding']
+        embeddings = OllamaEmbeddings(model=self.model)
+        vector = embeddings.embed_query(text)
+        return vector
 
     def encode_texts(self, texts: list[str]) -> list[Any]:
         """Encode a list of texts into embeddings using Ollama"""
