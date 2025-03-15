@@ -26,16 +26,3 @@ class OllamaEmbeddingRepository(BaseEmbeddingRepository):
         self.model = model
         super().__init__(embeddings=OllamaEmbeddings(model=model))
         print(f"Selected model: {self.model}")
-
-    def encode_text(self, text: str) -> Any:
-        """Encode text into an embedding using Ollama"""
-        vector = self.embeddings.embed_query(text)
-        return vector
-
-    def encode_texts(self, texts: list[str]) -> list[Any]:
-        """Encode a list of texts into embeddings using Ollama"""
-        return [self.encode_text(text) for text in texts]
-
-    def get_model_config(self) -> dict:
-        """Get the model's configuration (if applicable for Ollama)"""
-        return {"model": self.model}
