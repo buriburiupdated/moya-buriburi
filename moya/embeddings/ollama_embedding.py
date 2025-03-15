@@ -1,16 +1,16 @@
 from moya.embeddings.base_embedding import BaseEmbeddingRepository
 from typing import Any, Optional
-import ollama  # Import Ollama's client
-
+import ollama
 from langchain_ollama import OllamaEmbeddings
 
 class OllamaEmbeddingRepository(BaseEmbeddingRepository):
     def __init__(self, model: Optional[str] = None):
+        """
+        Initialize the repository with a specific Ollama model
+        """
         # Get available models directly from Ollama's model list
         available_models = [m['model'] for m in ollama.list()['models']]
-
         print("\nTo get more models, use: ollama pull <model-name>\n")
-
         if model is None:
             print("Available models:")
             for idx, m in enumerate(available_models, 1):
@@ -23,14 +23,13 @@ class OllamaEmbeddingRepository(BaseEmbeddingRepository):
                 model = choice
             else:
                 model = available_models[0]
-
         self.model = model
+        super().__init__(embeddings=OllamaEmbeddings(model=model))
         print(f"Selected model: {self.model}")
 
     def encode_text(self, text: str) -> Any:
         """Encode text into an embedding using Ollama"""
-        embeddings = OllamaEmbeddings(model=self.model)
-        vector = embeddings.embed_query(text)
+        vector = self.embeddings.embed_query(text)
         return vector
 
     def encode_texts(self, texts: list[str]) -> list[Any]:

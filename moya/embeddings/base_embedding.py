@@ -11,6 +11,11 @@ class BaseEmbeddingRepository(abc.ABC):
     """
     Abstract interface for storing and retrieving embeddings
     """
+    def __init__(self, embeddings: any):
+        """
+        Initialize the repository with a specific embedding model
+        """
+        self.embeddings = embeddings
 
     @abc.abstractmethod
     def encode_text(self, text: str) -> Any:

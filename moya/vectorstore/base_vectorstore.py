@@ -33,3 +33,10 @@ class BaseVectorstoreRepository(abc.ABC):
         Retrieve the k closest vectors to the query
         """
         pass
+
+    @abc.abstractmethod
+    def load_vectorstore(self, directory: str) -> None:
+        """
+        Load a vectorstore from the specified directory
+        """
+        pass

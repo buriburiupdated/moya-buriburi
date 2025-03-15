@@ -35,7 +35,9 @@ dependencies = [
   "tokenizers>=0.21.1",
   "langchain-chroma>=0.2.2",
   "ollama>=0.4.7",
-  "langchain_ollama>=0.2.3"
+  "langchain_ollama>=0.2.3",
+  "langchain_community>=0.3.19",
+  "faiss-cpu>=1.10.0"
 ]
 requires-python = ">=3.11" 
 
