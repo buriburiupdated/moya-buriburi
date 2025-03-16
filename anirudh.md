@@ -24,12 +24,11 @@ Check out `examples/quick_start_web_search.py` for a complete example.
 
 # Dynamic Tool Registration
 ## Overview
-The Dynamic Tool Registration feature in Moya allows you to create and register custom tools at runtime, extending agent capabilities without modifying the framework code. This powerful functionality makes it possible to add domain-specific functions as tools that agents can discover and call during conversations.
+The Dynamic Tool Registration feature in Moya allows you to create and register custom tools at runtime, extending agent capabilities without modifying the framework code. This powerful functionality allows users to add their own tool makes it possible to add domain-specific functions as tools that agents can discover and call during conversations.
 
 ## Key Capabilities
 - **Runtime Tool Registration:** Register new tools during program execution
 - **Function-Based Tools:** Convert Python functions into agent-callable tools
-- **Code String Registration:** Create tools from string representations of Python code
 - **Auto-Documentation:** Automatically generates tool descriptions from function docstrings
 - **Parameter Validation:** Ensures tool parameters are properly formatted for LLM consumption
 
