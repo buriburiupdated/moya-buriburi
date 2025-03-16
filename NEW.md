@@ -8,7 +8,6 @@ Performance Learning: Improves over time by tracking agent performance
 Workflow
 1. Bid Collection
 When a user message arrives, the orchestrator:
-
 Requests confidence scores from all available agents
 Can run in parallel for faster response
 For agents without a bid_on_task method, it estimates confidence based on:
@@ -16,9 +15,7 @@ Keyword overlap between message and agent description
 Historical performance of the agent
 2. Agent Selection
 The orchestrator makes a key decision:
-
 Use a single agent when:
-
 One agent has significantly higher confidence (>0.7 and 0.2+ higher than others)
 Only one agent is available
 Form a team when:
