@@ -1,58 +1,56 @@
 """
-Interactive RAG demo that vectorizes docs folder HTML files and uses Ollama to answer questions
-about the Moya framework with proper document citations.
+Math Solver demo with Ollama and enhanced MathTool.
+
+This example demonstrates:
+- Setting up an Ollama agent with enhanced math capabilities
+- Solving various types of math problems
+- Interactive mathematics problem solving
 """
 
-import os
 import sys
-import glob
-
-from langchain_ollama import OllamaEmbeddings
-
-from moya.agents.ollama_agent import OllamaAgent
-from moya.agents.base_agent import AgentConfig
 from moya.tools.tool_registry import ToolRegistry
 from moya.tools.math_tool import MathTool
-from moya.tools.ephemeral_memory import EphemeralMemory
-from moya.registry.agent_registry import AgentRegistry
-from moya.orchestrators.simple_orchestrator import SimpleOrchestrator
+from moya.agents.base_agent import AgentConfig
+from moya.agents.ollama_agent import OllamaAgent
 from moya.conversation.message import Message
 from moya.conversation.thread import Thread
+from moya.memory.in_memory_repository import InMemoryRepository
+from moya.tools.ephemeral_memory import EphemeralMemory
 
 
-def setup_agent(vector_store):
-    """Set up the Ollama agent with RAG search tool."""
-    # Set up the tool registry and configure tools
+def setup_math_agent():
+    """Set up an Ollama agent with enhanced math capabilities."""
+    # Set up the tool registry and configure math tools
     tool_registry = ToolRegistry()
     MathTool.configure_math_tools(tool_registry)
     EphemeralMemory.configure_memory_tools(tool_registry)
     
-    # Create agent configuration for Ollama
-    system_prompt = """You are a knowledgeable assistant that can solve 
-    When answering questions about Moya, use the VectorSearchTool to search the documentation.
-    Always cite sources by mentioning which file the information comes from.
-    Be concise and helpful."""
-    
-    agent_config = AgentConfig(
-        agent_name="moya_docs_assistant",
+    # Create a math-focused agent with Ollama
+    math_agent_config = AgentConfig(
+        agent_name="math_wizard",
         agent_type="ChatAgent",
-        description="Ollama agent integrated with RAG search of Moya documentation",
-        system_prompt=system_prompt,
+        description="A specialized mathematical assistant that can solve equations, compute derivatives and integrals, evaluate expressions, solve systems of equations, compute limits, and expand series.",
+        system_prompt=(
+            "You are a mathematics expert assistant with advanced symbolic math capabilities. "
+            "Use the provided math tools to solve problems precisely and show your work step-by-step. "
+            "For complex problems, break them down into smaller parts that can be solved with the available tools. "
+            "Always verify your solutions when possible."
+        ),
         tool_registry=tool_registry,
         llm_config={
-            "model_name": "llama3.1:latest",
-            "base_url": "http://localhost:11434",
-            "temperature": 0.7,
-            "context_window": 4096
+            'model_name': "llama3.1:latest",
+            'temperature': 0.2,  # Lower temperature for precise math
+            'base_url': "http://localhost:11434",
+            'context_window': 4096
         }
     )
-    
-    # Instantiate the Ollama agent
-    agent = OllamaAgent(agent_config)
-    
-    # Verify connection
+
+    # Create the agent
+    math_agent = OllamaAgent(math_agent_config)
+
+    # Verify Ollama connection
     try:
-        test_response = agent.handle_message("test connection")
+        test_response = math_agent.handle_message("test connection")
         if not test_response:
             raise Exception("No response from Ollama test query")
     except Exception as e:
@@ -60,19 +58,12 @@ def setup_agent(vector_store):
         print("1. Start Ollama: ollama serve")
         print("2. Pull model: ollama pull llama3.1:latest")
         sys.exit(1)
-    
-    # Set up agent registry and orchestrator
-    agent_registry = AgentRegistry()
-    agent_registry.register_agent(agent)
-    orchestrator = SimpleOrchestrator(
-        agent_registry=agent_registry,
-        default_agent_name="moya_docs_assistant"
-    )
-    
-    return orchestrator, agent
+
+    return math_agent
 
 
-def format_conversation_context(messages) -> str:
+def format_conversation_context(messages):
+    """Format previous messages for context."""
     context = "\nPrevious conversation:\n"
     for msg in messages:
         sender = "User" if msg.sender == "user" else "Assistant"
@@ -81,89 +72,76 @@ def format_conversation_context(messages) -> str:
 
 
 def main():
-    docs_dir = "../docs"
-    path = "faiss-index"
-    
-    embeddings = OllamaEmbeddings(model="nomic-embed-text")
+    """Run the interactive math solver demo with Ollama."""
+    math_agent = setup_math_agent()
+    thread_id = "math_solver_demo_001"
 
-    vector_store = FAISSCPUVectorstoreRepository(path, embeddings)
-    vector_store.create_vectorstore()
-
-    for file in glob.glob(f"{docs_dir}/*"):
-        vector_store.load_file(file)
-    
-    # Set up agent with RAG search tool
-    orchestrator, agent = setup_agent(vector_store)
-    thread_id = "moya_docs_thread"
-    
-    # Initialize conversation memory
-    EphemeralMemory.memory_repository.create_thread(Thread(thread_id=thread_id))
-    
-    print("\n" + "=" * 80)
-    print("Welcome to the Moya Documentation Assistant!")
-    print("Ask questions about the Moya framework and get answers from the documentation.")
+    print("\n" + "=" * 65)
+    print("Welcome to the Advanced Math Solver Demo with Ollama!")
+    print("This assistant can help with calculus, algebra, and other math problems.")
+    print("Examples of what you can ask:")
+    print("  - Solve the equation x^2 + 3x + 2 = 0")
+    print("  - Find the derivative of sin(x^2)")
+    print("  - Integrate x^3 with respect to x")
+    print("  - Solve the system of equations: x + y = 10, 2x - y = 5")
+    print("  - Find the limit of sin(x)/x as x approaches 0")
     print("Type 'quit' or 'exit' to end the session.")
-    print("=" * 80)
-    
-    # Example questions to help users get started
-    print("\nExample questions you can ask:")
-    print("- What is Moya?")
-    print("- How do I create an agent?")
-    print("- What types of agents are supported?")
-    print("- How does memory management work?")
-    print("- What is tool registry?")
-    
+    print("=" * 65)
+
+    # Setup memory for conversation history
+    memory_repo = InMemoryRepository()
+    memory_repo.create_thread(Thread(thread_id=thread_id))
+
+    def print_streaming_response(chunk):
+        """Callback for streaming responses."""
+        print(chunk, end="", flush=True)
+
     while True:
-        user_input = input("\nYou: ").strip()
+        user_input = input("\n\nYou: ").strip()
+
         if user_input.lower() in ['quit', 'exit']:
-            print("\nGoodbye!")
+            print("\nGoodbye! Hope you enjoyed solving math problems!")
             break
-        
+
         # Store user message
-        EphemeralMemory.memory_repository.append_message(
+        memory_repo.append_message(
             thread_id, 
             Message(thread_id=thread_id, sender="user", content=user_input)
         )
-        
-        # Retrieve conversation context
-        thread = EphemeralMemory.memory_repository.get_thread(thread_id)
+
+        # Get conversation context
+        thread = memory_repo.get_thread(thread_id)
         previous_messages = thread.get_last_n_messages(n=5)
-        context = format_conversation_context(previous_messages) if previous_messages else ""
-        
-        # Construct prompt that includes an instruction to use RAG
-        enhanced_input = (
-            f"{context}"
-            f"User: {user_input}\n\n"
-            f"Remember to use the VectorSearchTool to search for information in the documentation. "
-            f"Search query: {user_input}"
-        )
-        
-        print("\nAssistant: ", end="", flush=True)
-        
+
+        if previous_messages and len(previous_messages) > 1:
+            context = format_conversation_context(previous_messages)
+            enhanced_input = f"{context}\nCurrent query: {user_input}"
+        else:
+            enhanced_input = user_input
+
         try:
-            # Try streaming response first
+            print("\nMath Wizard: ", end="", flush=True)
+            
+            # Get response from the math agent with streaming
             response = ""
-            try:
-                for chunk in agent.handle_message_stream(enhanced_input):
-                    if chunk:
-                        print(chunk, end="", flush=True)
-                        response += chunk
-            except Exception as e:
-                # Fall back to non-streaming
-                response = agent.handle_message(enhanced_input)
+            message_stream = math_agent.handle_message_stream(enhanced_input, thread_id=thread_id)
+            
+            if message_stream:
+                for chunk in message_stream:
+                    print_streaming_response(chunk)
+                    response += chunk
+            else:
+                response = math_agent.handle_message(enhanced_input, thread_id=thread_id)
                 print(response)
-            
-            print()  # Add newline after response
-            
-            # Store agent response in memory
-            EphemeralMemory.memory_repository.append_message(
+
+            # Store assistant's response
+            memory_repo.append_message(
                 thread_id,
                 Message(thread_id=thread_id, sender="assistant", content=response)
             )
             
         except Exception as e:
-            print(f"\nAn error occurred: {str(e)}")
-            continue
+            print(f"\nError: {str(e)}")
 
 
 if __name__ == "__main__":

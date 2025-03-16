@@ -12,3 +12,6 @@ class AgentInfo():
         self.name = name
         self.description = description
         self.type = type
+    
+    def __hash__(self):
+        return hash((self.name, self.description, self.type))
