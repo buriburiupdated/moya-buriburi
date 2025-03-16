@@ -200,6 +200,31 @@ A configuration class derived from `AgentConfig` that holds the essential parame
 ### `HuggingFaceAgent`
 A core agent class that interacts with Hugging Face models and handles user interactions.
 
+To create a HuggingFace Agent, you need to provide the following:
+```python
+    from moya.agents.huggingface_agent import HuggingFaceAgent,     HuggingFaceAgentConfig
+
+    tool_registry = ToolRegistry()
+
+    config = HuggingFaceAgentConfig(
+        agent_name="any_name",
+        agent_type="HuggingFaceAgent",
+        description="Description of the agent",
+        model_name="huggingface/repository_name",
+        task="task_name (eg: text-generation)",
+        tool_registry=tool_registry,
+        use_api=False,
+        device="cpu",
+        generation_config={
+            'max_new_tokens': 512,
+            'temperature': 0.7,
+            'do_sample': True
+        }
+    )
+
+    agent = HuggingFaceAgent(config)
+```
+
 **Methods:**
 
 #### `__init__(self, config: HuggingFaceAgentConfig)`
