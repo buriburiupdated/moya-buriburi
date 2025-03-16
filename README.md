@@ -90,7 +90,7 @@ We welcome contributions to the MOYA framework. Please follow these steps to con
 3. Make your changes and commit them with descriptive messages.
 4. Push your changes to your fork.
 5. Create a pull request to the main repository.
-
+### link to pitch deck: https://www.beautiful.ai/-OLTQH8Yui2DTDDva8oR/1
 ### License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
