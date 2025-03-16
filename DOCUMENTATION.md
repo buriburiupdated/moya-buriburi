@@ -650,3 +650,37 @@ This example demonstrates how to set up and use the `AzureOpenAI` agent with dyn
 
 This example uses claude api to integrate web search capabilities.
 
+#
+# Vector Stores
+
+Made a unified tech agnostic vectorstore class to run both ChromaDB and FAISS index. This tool is used by the `rag_search` tool
+
+```
+moya/vectorstore/base_vectorstore.py
+moya/vectorstore/chroma_vectorstore.py
+moya/vectorstore/faisscpu_vectorstore.py
+```
+
+#
+# Agent Consultion Tool
+Introduction
+The AgentConsultationTool is a powerful feature in the Moya framework that enables agents to communicate with and consult other agents. This allows for the creation of specialized agent ecosystems where agents can leverage each other's capabilities to solve complex problems through collaboration.
+
+Key Features
+Inter-Agent Communication: Allows agents to request assistance from other agents with specialized knowledge
+Agent Discovery: Provides functionality to list available agents and their capabilities
+Expertise Assessment: Helps determine which agents would be most suitable for specific questions
+Structured Knowledge Exchange: Facilitates organized information sharing between agents
+Context Preservation: Maintains conversation context across agent consultations
+Architecture
+The Agent Consultation Tool consists of several components:
+
+Agent Registry Integration: Connects with the agent registry to identify available agents
+Consultation Protocol: Defines how agents request and receive information from each other
+Tool Registration: Registers consultation capabilities with the Moya tool registry
+Setup and Configuration
+To use the Agent Consultation Tool, you need to:
+
+#
+# Math Tool
+This enables the agent to solve math problems by leveraging sympy.
