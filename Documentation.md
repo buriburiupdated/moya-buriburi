@@ -395,6 +395,13 @@ Enables the agent to search through a given knowledge base for documents most si
     ```
 
 Check out `examples/quick_start_ollama_rag.py` for a complete example.
+#
+
+# Dynamic RAG
+
+By leveratng the `VectorSearchTools` and `SearchTools` we can create a agent that searches knowledge base for the answer to the question and also use web search to verify answers to provide more accurate answers. 
+
+Check out `examples/quick_start_dynamic_rag.py` for how to implement this.
 
 #
 
