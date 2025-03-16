@@ -1,6 +1,6 @@
 """
 Interactive Azure OpenAI chat interface with dynamic RAG and web search capabilities.
-Combines features from test_azure_openai.py and quick_start_dynamic_rag.py.
+Combines features from test_azure_openai.py and quick_start_dynamic_rag.py. almost there
 """
 
 import os
