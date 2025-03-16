@@ -470,30 +470,6 @@ Check out `examples/quick_start_bid_orchestrator.py` for a complete example.
 
 #
 
-# Web Search Tool
-Enables the agent to search the web for the most relevant information based on a user query.
-
-1. Add the tool to the agent during setup
-
-    ```python
-    from moya.search.searchtool import SearchTool
-
-
-    def setup_agent():
-      tool_registry = ToolRegistry()
-      SearchTool.configure_search_tools(tool_registry)
-      # Rest of the setup...
-    ```
-
-2. Now we can search the web for the most relevant information using `SearchTool.search_web_free(query)` (for searches without the need of an API) or \
- `SearchTool.search_web(query)` (for better results provided the `SERPAPI_KEY` is set in the environment variables).
-
-
-
-Check out `examples/quick_start_web_search.py` for a complete example.
-
-#
-
 # Dynamic Tool Registration
 ## Overview
 The Dynamic Tool Registration feature in Moya allows you to create and register custom tools at runtime, extending agent capabilities without modifying the framework code. This powerful functionality allows users to add their own tool makes it possible to add domain-specific functions as tools that agents can discover and call during conversations.
@@ -642,3 +618,35 @@ DynamicToolRegistrar.register_functions(
 ```
 
 Check out `examples/quick_start_ollama_dynamic_tool.py` for a complete example of using dynamic tool registration with an Ollama agent.
+
+#
+
+# Search Tool
+
+The `SearchTool` provides web search capabilities for agents. It supports both paid (SerpAPI) and free (DuckDuckGo) search options.
+
+**Key Features:**
+- Performs web searches using SerpAPI or DuckDuckGo.
+- Returns formatted search results in JSON format.
+- Integrates with the **Moya** tool registry.
+
+**Methods:**
+
+- `search_web(query: str, num_results: int = 5) -> str`: Searches the web using SerpAPI.
+- `search_web_free(query: str, num_results: int = 5) -> str`: Searches the web using DuckDuckGo (no API key required).
+- `configure_search_tools(tool_registry) -> None`: Configures search tools and registers them with the tool registry.
+
+### Example Usage
+
+#### `test_azure_openai.py`
+
+This example demonstrates how to set up and use the `AzureOpenAI` agent with web search capabilities.
+
+#### `test_azure_openai_dynamic_rag.py`
+
+This example demonstrates how to set up and use the `AzureOpenAI` agent with dynamic RAG (Retrieval-Augmented Generation) and web search capabilities.
+
+#### `quick_start_claude_search.py`
+
+This example uses claude api to integrate web search capabilities.
+
