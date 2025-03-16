@@ -76,7 +76,7 @@ class BidOrchestrator(BaseOrchestrator):
             return self._handle_no_bids(thread_id, user_message, **kwargs)
         
         # Phase 2: Select winning agent(s) based on bids
-        if self._should_form_team(bids):
+        if self._should_form_team(bids, user_message):
             self.log("Forming an agent team to handle complex request")
             return self._process_with_team(thread_id, user_message, bids, stream_callback, **kwargs)
         else:
@@ -180,14 +180,93 @@ class BidOrchestrator(BaseOrchestrator):
             return AgentBid(agent_name=agent_name, confidence=0.1)
             
         return bids[0]  # We already sorted by confidence
+    
+    def _estimate_task_complexity(self, user_message: str) -> float:
+        """
+        Estimate the complexity of a task based on multiple factors.
+        Returns a normalized complexity score between 0.0 (very simple) and 1.0 (extremely complex).
+        """
+        # Initialize base complexity
+        complexity = 0.0
+        
+        # 1. Length-based complexity - longer messages often indicate more complex tasks
+        message_length = len(user_message)
+        # Normalize using a sigmoid function to handle very long messages
+        length_factor = min(0.3, 1 / (1 + math.exp(-message_length / 500 + 3)))
+        complexity += length_factor
+        
+        # 2. Question complexity - multiple questions indicate higher complexity
+        question_count = user_message.count('?')
+        question_factor = min(0.2, question_count * 0.05)
+        complexity += question_factor
+        
+        # 3. Linguistic complexity indicators
+        complexity_indicators = [
+            "complex", "difficult", "advanced", "sophisticated", 
+            "analyze", "evaluation", "compare", "synthesis",
+            "integration", "optimization", "trade-off"
+        ]
+        
+        indicator_count = sum(1 for word in complexity_indicators if word.lower() in user_message.lower())
+        indicator_factor = min(0.15, indicator_count * 0.03)
+        complexity += indicator_factor
+        
+        # 4. Domain-specific complexity - look for technical terms
+        technical_domains = {
+            "programming": ["code", "function", "algorithm", "implementation", "debug"],
+            "mathematics": ["equation", "theorem", "proof", "calculation", "formula"],
+            "finance": ["investment", "portfolio", "asset", "liability", "valuation"],
+            "science": ["experiment", "hypothesis", "analysis", "research", "methodology"]
+        }
+        
+        domain_matches = {}
+        for domain, terms in technical_domains.items():
+            matches = sum(1 for term in terms if term.lower() in user_message.lower())
+            if matches > 0:
+                domain_matches[domain] = matches
+        
+        # Higher complexity if multiple domains are involved (interdisciplinary)
+        domain_count = len(domain_matches)
+        domain_factor = min(0.2, domain_count * 0.1)
+        complexity += domain_factor
+        
+        # 5. Task structure complexity - multiple subtasks indicated by numbered lists, bullets, etc.
+        structure_indicators = re.findall(r'(\d+\.\s|\*\s|-\s|•\s|Step \d+)', user_message)
+        structure_factor = min(0.15, len(structure_indicators) * 0.025)
+        complexity += structure_factor
+        
+        # 6. Dependency indicators - tasks that depend on other tasks or have constraints
+        dependency_terms = ["if", "when", "after", "before", "only if", "unless", "depending on", "given that"]
+        dependency_count = sum(1 for term in dependency_terms if term.lower() in user_message.lower())
+        dependency_factor = min(0.1, dependency_count * 0.02)
+        complexity += dependency_factor
+        
+        # 7. Temporal complexity - deadlines, scheduling, timing requirements
+        temporal_terms = ["deadline", "schedule", "timeline", "by tomorrow", "within", "hours", "minutes"]
+        temporal_count = sum(1 for term in temporal_terms if term.lower() in user_message.lower())
+        temporal_factor = min(0.1, temporal_count * 0.025)
+        complexity += temporal_factor
+        
+        # Optional: Historical complexity adjustment
+        # If we've seen similar tasks before, adjust based on past performance
+        historical_adjustment = self._get_historical_complexity_adjustment(user_message)
+        complexity += historical_adjustment
+        
+        # Ensure final value is between 0 and 1
+        return max(0.0, min(1.0, complexity))
+
 
     
-    def _should_form_team(self, bids: List[AgentBid]) -> bool:
+    def _should_form_team(self, bids: List[AgentBid], user_message: str) -> bool:
         """Determine if we should form a team of agents."""
         if len(bids) < 2:
             return False
         
-        # Check if the top agent is significantly more confident than others
+        task_complexity = self._estimate_task_complexity(user_message)
+
+        if task_complexity < 0.7:
+            return False
+        
         best_confidence = bids[0].confidence
         runner_up_confidence = bids[1].confidence if len(bids) > 1 else 0
         
