@@ -12,7 +12,7 @@ from moya.orchestrators.simple_orchestrator import SimpleOrchestrator
 from moya.agents.claude_agent import ClaudeAgent, ClaudeAgentConfig
 from moya.tools.ephemeral_memory import EphemeralMemory
 from moya.tools.search_tool import SearchTool
-from examples.quick_tools import QuickTools
+from quick_tools import QuickTools
 from moya.tools.base_tool import BaseTool
 
 dotenv.load_dotenv()

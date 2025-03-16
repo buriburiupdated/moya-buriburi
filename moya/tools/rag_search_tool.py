@@ -9,11 +9,9 @@ from moya.tools.base_tool import BaseTool
 
 class VectorSearchTool:
     """Tools for vector database search capabilities."""
-    def __init__(self):
-        self.vector_store = None
     
     @staticmethod
-    def search_vectorstore(self, query: str, collection_name: str = "faiss-index", k: int = 5) -> str:
+    def search_vectorstore(query: str, vector_store: Any, k: int = 5) -> str:
         """
         Search a vector database for relevant documents based on semantic similarity.
         
@@ -27,14 +25,10 @@ class VectorSearchTool:
         """
         try:
             # Get the appropriate vector store
-            # In a real implementation, you might want to maintain a registry of vector stores
-            vector_store = self.vector_store
             
             # Search for relevant documents
             results = vector_store.get_context(query, k)
-            print(results)
-            
-            # Format results
+
             formatted_results = []
             for i, doc in enumerate(results):
                 formatted_results.append({
@@ -45,7 +39,6 @@ class VectorSearchTool:
             
             return json.dumps({
                 "query": query,
-                "collection": collection_name,
                 "results": formatted_results
             }, indent=2)
             
@@ -53,18 +46,16 @@ class VectorSearchTool:
             return json.dumps({
                 "error": str(e),
                 "query": query,
-                "collection": collection_name
             })
     
     @staticmethod
-    def configure_vector_search_tools(tool_registry, vector_store) -> None:
+    def configure_vector_search_tools(tool_registry) -> None:
         """
         Configure vector search tools and register them with the tool registry.
         
         Args:
             tool_registry: The tool registry to register tools with.
         """
-        VectorSearchTool.vector_store = vector_store
         tool_registry.register_tool(
             BaseTool(
                 name="VectorSearchTool",
