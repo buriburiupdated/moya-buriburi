@@ -267,6 +267,35 @@ def main():
             print("\nInformation has been added to the knowledge base.")
             continue
         
+        # Add this to your main() function to implement a /kb command
+        if user_input.startswith("/kb "):
+            search_query = user_input[4:].strip()
+            print(f"\n[Directly searching knowledge base for: '{search_query}']")
+            
+            # Use langchain FAISS directly to bypass problematic code
+            from langchain_community.vectorstores import FAISS
+            from langchain_ollama import OllamaEmbeddings
+            
+            # Load knowledge base directly
+            embeddings = OllamaEmbeddings(model="nomic-embed-text")
+            try:
+                # Add the allow_dangerous_deserialization parameter
+                direct_vs = FAISS.load_local(
+                    "azure-dynamic-faiss", 
+                    embeddings,
+                    allow_dangerous_deserialization=True  # Add this parameter
+                )
+                results = direct_vs.similarity_search(search_query, k=3)
+                
+                # Display results
+                print("\nKnowledge Base Results:")
+                for i, doc in enumerate(results):
+                    print(f"\nDocument {i+1}:")
+                    print(f"{doc.page_content}")
+                
+            except Exception as e:
+                print(f"Error accessing knowledge base: {e}")
+        
         # For any factual question, automatically trigger a search
         if any(keyword in user_input.lower() for keyword in ["who", "what", "when", "where", "how", "why"]):
             query = user_input
@@ -313,6 +342,9 @@ def main():
             
             vector_search_matches = re.findall(vector_search_pattern, full_response)
             web_search_matches = re.findall(web_search_pattern, full_response)
+            
+            print(f"DEBUG - Vector search matches: {vector_search_matches}")
+            print(f"DEBUG - Web search matches: {web_search_matches}")
             
             # If searches were requested, process them and regenerate response
             if vector_search_matches or web_search_matches:
@@ -363,17 +395,27 @@ def main():
                 for query in web_search_matches:
                     print(f"\n[Searching web for: '{query}']")
                     
-                    # Execute web search
-                    web_result = SearchTool.search_web_free(query)
-                    search_context += f"\n## Web Search Results for '{query}':\n{web_result}\n"
-                    
-                    # Extract and add valuable information to knowledge base
-                    print(f"[LEARNING] Extracting and adding information from web search to knowledge base...")
-                    extracted_info = extract_and_add_search_info(client, vector_store, query, web_result)
-                    learned_info.append(f"New information about '{query}' has been added to my knowledge base.")
-                    
-                    # Add note that the information was added to knowledge base
-                    search_context += f"\n(Information from this search has been added to my knowledge base for future reference.)\n"
+                    try:
+                        # Make sure this executes
+                        print("DEBUG: Executing web search for: " + query)
+                        web_result = SearchTool.search_web_free(query)
+                        print(f"Web search result length: {len(web_result)}")  # Debug line
+                        
+                        if web_result:
+                            search_context += f"\n## Web Search Results for '{query}':\n{web_result}\n"
+                            
+                            # Extract and add valuable information to knowledge base
+                            print(f"[LEARNING] Extracting and adding information from web search to knowledge base...")
+                            extracted_info = extract_and_add_search_info(client, vector_store, query, web_result)
+                            learned_info.append(f"New information about '{query}' has been added to my knowledge base.")
+                            
+                            # Add note that the information was added to knowledge base
+                            search_context += f"\n(Information from this search has been added to my knowledge base for future reference.)\n"
+                        else:
+                            search_context += f"\n## Web Search for '{query}' returned no results\n"
+                    except Exception as e:
+                        print(f"ERROR executing web search: {e}")
+                        search_context += f"\n## Error executing web search for '{query}': {str(e)}\n"
                 
                 # Construct follow-up message with all search results
                 follow_up_msg = f"""
