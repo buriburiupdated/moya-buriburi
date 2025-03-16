@@ -19,6 +19,8 @@ Issue with adding support for openai embeddings due to unavailability of proper 
 
 ### Added support for claude and deepseek.
 
+### Added support for hugging face agent
+
 ### Implemented different types of embeddings
 
 ### Implemented different types of vector storage
